@@ -33,3 +33,35 @@ class DB:
             DBSession = sessionmaker(bind=self._engine)
             self.__session = DBSession()
         return self.__session
+
+    def add_user(self, email: str, hashed_password: str) -> User:
+        """
+        Create a User object and save it to the database
+        Args:
+            email (str): user's email address
+            hashed_password (str): password hashed by bcrypt's hashpw
+        Return:
+            Newly created User object
+        """
+        user = User(email=email, hashed_password=hashed_password)
+        self._session.add(user)
+        self._session.commit()
+        return user
+
+    def find_user_by(self, **kwargs) -> User:
+        """
+        Return a user who has an attribute matching the attributes passed
+        as arguments
+        Args:
+            attributes (dict): a dictionary of attributes to match the user
+        Return:
+            matching user or raise error
+        """
+        all_users = self._session.query(User)
+        for k, v in kwargs.items():
+            if k not in User.__dict__:
+                raise InvalidRequestError
+            for usr in all_users:
+                if getattr(usr, k) == v:
+                    return usr
+        raise NoResultFound
